@@ -5,7 +5,7 @@
 import pycurl
 import json
 import random
-from StringIO import StringIO
+from io import StringIO
 
 
 class httpHandler:
@@ -14,7 +14,7 @@ class httpHandler:
         self.timeoutMS = timeoutMS
 
     def getIP(self):
-        print self.IP
+        print(self.IP)
 
     def setIP(self,IP):
         self.IP = IP
@@ -32,13 +32,13 @@ class httpHandler:
 
     def patchData(self, address, data, formfieldName = 'json'):
         
-        #print address
-        #print data
+        #print(address)
+        #print(data)
         c = pycurl.Curl()
         c.setopt(c.URL, 'http://' + self.IP + address + '?client=' + str(random.randrange(0,2147483647)))
         jData = json.dumps(data)
         jData = formfieldName + '=' + json.dumps(data)
-        #print jData
+        #print(jData)
         c.setopt(pycurl.POSTFIELDS, jData)
         c.setopt(c.CUSTOMREQUEST, 'PATCH')
         c.perform()
@@ -68,7 +68,7 @@ class httpHandler:
         return responseJson
 
 def httpAction():
-    print 'do HTTP things'
+    print('do HTTP things')
 """ 
 
 buncha testing 
@@ -85,7 +85,7 @@ def doCurlyThings():
     c.setopt(pycurl.POSTFIELDS, jData)
     c.setopt(pycurl.VERBOSE, 0)
 
-    print jData
+    print(jData)
 
     responseData = StringIO()
 
@@ -107,17 +107,17 @@ def doCurlyThings():
     body = responseData.getvalue()
     responseJson = json.loads(body)
 
-    print body
+    print(body)
 
-    print ""
-    #print body['0001f2fffe00a5f6/url']
-    print responseJson #['0001f2fffe00a5f6/url']
+    print("")
+    #print(body['0001f2fffe00a5f6/url'])
+    print(responseJson, #['0001f2fffe00a5f6/url'])
 
 
     # HTTP response code, e.g. 200.
     print('Status: %d' % c.getinfo(c.RESPONSE_CODE))
     # Elapsed time for the transfer.
     print('Time: %f' % c.getinfo(c.TOTAL_TIME))
-    print ""
+    print("")
 
     c.close() """

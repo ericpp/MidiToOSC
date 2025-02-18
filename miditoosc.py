@@ -2,7 +2,7 @@
 #
 
 import mido
-import OSC
+from pythonosc import udp_client
 import json
 import math
 import time
@@ -38,7 +38,7 @@ midiMaxValue = 127.0
 
 
 conf = configHandler.configHandler(configFile=configFile)
-osc = OSC.OSCClient()
+osc = None
 http = httpHandler.httpHandler()
 #endregion
 
@@ -77,15 +77,15 @@ def reloadConfig():
 	print(str(datetime.now()) + " Configuration updated")
 
 	#ugly, make a nicer result at some point?
-	print conf
+	print(conf)
 
 def quitViolently(message = 'Quitting violently!'):
-	print message
+	print(message)
 	quit()
 
 def runShellScript(shellScriptPath):
 	path = './scripts/' + shellScriptPath
-	print path
+	print(path)
 	subprocess.call(['bash', path])
 
 #endregion
@@ -93,7 +93,8 @@ def runShellScript(shellScriptPath):
 
 #reconnects the OSC object to ip/port in config
 def reconnectOSC():
-	osc.connect((conf.IP,conf.port))
+	# osc.connect((conf.IP,conf.port))
+	osc = udp_client.SimpleUDPClient(conf.IP, conf.port)
 #reconnects HTTP object. in reality just sets the IP to connect to when message is sent
 #rename?
 def reconnectHTTP():
@@ -117,7 +118,11 @@ def mtoAction(midiNum, midiValue, midiType):
 		mtoCommand(midiNum, midiValue, midiType)
 
 def mtoOSC(midiNum, midiValue, midiType):
-	osc.send(getOSCMessage(midiNum, midiValue, midiType))
+	# osc.send(getOSCMessage(midiNum, midiValue, midiType))
+	osc.send_message(
+		getEventAddress(midiNum, midiType),
+		getEventValue(midiNum, midiValue, midiType)
+	)
 
 #implement sending json of multiple values?
 #maybe?
@@ -125,8 +130,8 @@ def mtoOSC(midiNum, midiValue, midiType):
 def mtoHTTP(midiNum, midiValue, midiType):
 	#http can technically send batches of data with json, but only one parameter is currently supported
 	data = http.getValueList(getHTTPValueAttribute(midiNum,midiValue,midiType), getEventValue(midiNum,midiValue,midiType))
-	#print data
-	#print getHTTPAddress(midiNum,midiType)
+	#print(data)
+	#print(getHTTPAddress(midiNum,midiType))
 	http.patchData(getEventAddress(midiNum,midiType), data)
 
 def mtoCommand(midiNum, midiValue, midiType):
@@ -247,11 +252,11 @@ def getEventAddress(midiNum, midiType):
 	address = conf.MidiEventList[midiType][midiNum].address
 	return address
 
-def getOSCMessage(midiNum, midiValue, midiType):
-	oscMsg = OSC.OSCMessage()
-	oscMsg.setAddress(getEventAddress(midiNum, midiType))
-	oscMsg.append(getEventValue(midiNum, midiValue, midiType))
-	return oscMsg
+# def getOSCMessage(midiNum, midiValue, midiType):
+# 	oscMsg = OSC.OSCMessage()
+# 	oscMsg.setAddress(getEventAddress(midiNum, midiType))
+# 	oscMsg.append(getEventValue(midiNum, midiValue, midiType))
+# 	return oscMsg
 
 #endregion
 
@@ -292,7 +297,7 @@ def isDefinedMidi(msg):
 
 def doThrottle(midiNum, midiValue, midiType):
 	global conf
-	# print conf.globalThrottleOverride
+	# print(conf.globalThrottleOverride)
 	prevValue = conf.MidiEventList[midiType][midiNum].prevValue
 	prevTime = conf.MidiEventList[midiType][midiNum].prevTime
 	currTime = time.time()*1000
@@ -303,8 +308,8 @@ def doThrottle(midiNum, midiValue, midiType):
 		or (250>=deltaTime > 150 and deltaValue>2)
 		or (deltaTime > 250 and deltaValue>0)
 		or midiValue in [0,127]):
-		# print deltaTime
-		# print deltaValue
+		# print(deltaTime)
+		# print(deltaValue)
 		prevValue = conf.MidiEventList[midiType][midiNum].prevValue = midiValue
 		prevTime = conf.MidiEventList[midiType][midiNum].prevTime = currTime
 		return True
@@ -323,9 +328,9 @@ def isValidMidiInput(inputDevice):
 #put debug messages to run on launch here
 #will only work if debug:1 is set in the json-config
 def debugCommands():
-	print ''
-	print 'Debug messages from debugCommand():'
-	print ''
+	print('')
+	print('Debug messages from debugCommand():')
+	print('')
 	# mtoAction(80,0,'control_change')
 
 	mtoAction(80,0,'control_change')
@@ -348,15 +353,15 @@ reloadConfig()
 #use the information provided from the output here if you struggle with finding a working midi device
 #
 #for future development, mido.get_output_names() would be useful to add here
-print ""
-print "Available MIDI Inputs: "
-print mido.get_input_names()
-print ""
+print("")
+print("Available MIDI Inputs: ")
+print(mido.get_input_names())
+print("")
 
-print "Listening on device: "
-print conf.midiDeviceInput
-print "Listening on channel (0-15), i.e. 0 = midi 1, 15 = midi 16 etc: "
-print conf.midiChannelInput
+print("Listening on device: ")
+print(conf.midiDeviceInput)
+print("Listening on channel (0-15), i.e. 0 = midi 1, 15 = midi 16 etc: ")
+print(conf.midiChannelInput)
 
 #debug things here
 if(conf.debug == 1):
@@ -372,13 +377,13 @@ if(isValidMidiInput(conf.midiDeviceInput)):
 			if(isDefinedMidi(msg)):
 				mtoAction(getMidiNum(msg), getMidiValue(msg), msg.type)
 				if(conf.debug == 1):
-					print "Handled MIDI:"
+					print("Handled MIDI:")
 					print(msg)
 			else:
 				#debug handling to control printing of messages
 				#ALL messages gets printed here
 				if(conf.debug == 1):
-					print "Unhandled MIDI:"
+					print("Unhandled MIDI:")
 					print(msg)
 else:
 	quitViolently("MIDI Device could not be found, make sure config matches one of the available MIDI Inputs.")
