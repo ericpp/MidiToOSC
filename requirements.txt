@@ -1,0 +1,4 @@
+mido
+python-osc
+pycurl
+python-rtmidi
