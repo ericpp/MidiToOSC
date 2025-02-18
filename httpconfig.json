@@ -3,8 +3,6 @@
     {
         "projectURL":"https://github.com/ericpp/MidiToOSC",
         "IP": "192.168.1.167",
-        "laptopIP": "192.168.1.6",
-        "motuIP": "192.168.1.167",
         "port": 9998,
         "midiDeviceInput":"pisound:pisound MIDI PS-0M46XP2 20:0",
         "midiChannelInput":5,
