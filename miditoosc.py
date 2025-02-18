@@ -31,7 +31,7 @@ import httpHandler
 #region GLOBALS
 
 #can be set to anything you want
-configFile = 'oscconfig.json'
+configFile = 'httpconfig.json'
 # constant for doing calculations for scaling values
 # keep note this is 7-bit midi only, no support for nrpn midi yet
 midiMaxValue = 127.0
